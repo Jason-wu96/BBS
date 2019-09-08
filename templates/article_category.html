@@ -1,0 +1,21 @@
+{% extends '母版.html' %}
+{% block page-main %}
+    <div class="col-md-8">
+        <div class="article-category">
+            {% for category in categorys %}
+                <p>当前标签: {{ category.title }}</p>
+                <hr>
+                <div class="article-list">
+                {% for article in article_list %}
+                    <span class="article-category-list"><a href="/app01/{{ article.user.username }}/article/{{ article.pk }}">{{ article.title }}</a></span>
+                    <span>{{ article.user.username }}</span>
+                    <span>{{ article.create_time|date:'Y-m-d H:i:s' }}</span>
+                    <span>评论({{ article.comment_set.all.count }})</span>
+                    <span>点赞({{ article.articleupdown_set.all.count }})</span>
+                    <hr>
+                {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

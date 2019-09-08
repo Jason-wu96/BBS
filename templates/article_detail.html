@@ -1,0 +1,154 @@
+{% extends '母版.html' %}
+{% block page-main %}
+    <div class="col-md-8">
+        <div class="article-detail">
+            <h1>{{ article.title }}</h1>
+            <p>{{ article.articledetail.content|safe }}</p>
+        </div>
+        <div class="poll clearfix">
+            <div id="div_digg">
+                <div class="diggit action">
+                    <span class="diggnum" id="digg_count">{{ article.up_count }}</span>
+                </div>
+                <div class="buryit action">
+                    <span class="burynum" id="bury_count">{{ article.down_count }}</span>
+                </div>
+                <div class="clear"></div>
+                <div class="diggword" id="digg_tips">
+                </div>
+            </div>
+        </div>
+        <div class="comment">
+            <div class="info" article_id={{ article.pk }} username={{ request.user.username }}></div>
+            <div class="comment-list">
+                <p>评论列表:</p>
+                <ul class="comment_list">
+                    {% for comment in comment_list %}
+                        <li class="list-group-item">
+                            <div>
+                                <a href=""><span class="count">#{{ forloop.counter }}楼</span></a>&nbsp &nbsp;
+                                <span style="color: gray;">{{ comment.create_time|date:'Y-m-d H:i:s' }}</span>&nbsp
+                                &nbsp;
+                                <a><span>{{ comment.user.username }}</span></a>
+                                <a class="pull-right reply_btn" username="{{ comment.user.username }}"
+                                   comment_pk="{{ comment.pk }}"><span>回复</span></a>
+                            </div>
+                            {% if comment.parent_comment_id %}
+                                <div class="son-comment">
+                                <p>{{ comment.parent_comment.user.username }}:
+                                &nbsp &nbsp;{{ comment.parent_comment.content }}</p>
+                                </div>
+                            {% endif %}
+                            <div class="con">
+                                <p>{{ comment.content }}</p>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="comment-author">
+                <p>
+                    昵称：<input type="text" id="tbCommentAuthor" class="author" disabled="disabled" size="50"
+                              value={{ request.user.username }}>
+                </p>
+            </div>
+            <div class="comment-content">
+                <p>评论内容:</p>
+                <div class="clear"></div>
+                <textarea id="tbCommentBody" class="comment_textarea"></textarea>
+            </div>
+            <button id="comment-btn">提交评论</button>
+        </div>
+    </div>
+    <script>
+
+        {#!!!! 评论系统ajax#}
+        var pid = '';
+        $('#comment-btn').click(function () {
+            var article_id = $('.info').attr('article_id');
+            var content = $('#tbCommentBody').val();
+               if (pid) {
+                var index = content.indexOf("\n");
+                content = content.slice(index + 1)
+            }
+
+            $.ajax({
+                url: '/app01/comment/',
+                type: 'post',
+                data: {
+                    pid: pid,
+                    article_id: article_id,
+                    content: content,
+                },
+                success: function (data) {
+                    var create_time = data.create_time;
+                    var content = data.content;
+                    var username = data.username;
+                    var forloop_counter = $('.count').val();
+                    var comment_li = '<li class="list-group-item"><div><span style="color: gray">' + create_time + '</span> &nbsp;&nbsp; <a href=""><span>' + username + '</span></a></div> <div class="con"> <p> ' + content + ' </p> </div> </li>';
+                    $(".comment_list").append(comment_li);
+                    // 清空文本框
+                    $("#tbCommentBody").val('');
+                    {#                    // 清空pid#}
+                }
+            })
+        });
+        $('.reply_btn').click(function(){
+                $('#tbCommentBody').focus();
+                var v = '@'+$('.reply_btn').attr('username')+'\n';
+                $('#tbCommentBody').val(v);
+                pid = $('.reply_btn').attr("comment_pk");
+            });
+
+        {#！！！！！ 点赞系统ajax#}
+        $("#div_digg .action").click(function () {
+            // 点赞或踩灭
+            var is_up = $(this).hasClass("diggit");
+            var article_id = "{{ article.pk }}";
+
+            $.ajax({
+                url: "/app01/up_down/",
+                type: "post",
+                data: {
+                    is_up: is_up,
+                    article_id: article_id,
+                    csrfmiddlewaretoken: $("[name='csrfmiddlewaretoken']").val(),
+                },
+                success: function (data) {
+                    console.log(data);
+
+
+                    if (data.status) {// 赞或者灭成功
+
+                        if (is_up) {
+                            var val = $("#digg_count").text();
+                            val = parseInt(val) + 1;
+                            $("#digg_count").text(val);
+                        } else {
+                            var val = $("#bury_count").text();
+                            val = parseInt(val) + 1;
+                            $("#bury_count").text(val);
+                        }
+                    } else {    // 重复提交
+
+                        if (data.msg) {
+                            $("#digg_tips").html("您已经推荐过");
+                        } else {
+                            $("#digg_tips").html("您已经反对过");
+                        }
+
+                        setTimeout(function () {
+                            $("#digg_tips").html("")
+                        }, 1000)
+
+                    }
+
+                }
+            })
+
+
+        });
+    </script>
+{% endblock %}
+
+

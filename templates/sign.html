@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>sign</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="../static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/fontawesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="/static/all.css">
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form method="post" action="/sign/" class="form-horizontal" autocomplete="off"  style="margin-top: 70px" novalidate enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-group ">
+                    <label for="{{ form_obj.username.id_for_label }}"
+                           class="col-sm-2 ">{{ form_obj.username.label }}</label>
+                    <div class="col-sm-10">
+                        {{ form_obj.username }}
+                        <span id="helpBlock2" class="help-block">{{ form_obj.username.errors.0 }}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form_obj.password.id_for_label }}"
+                           class="col-sm-2 ">{{ form_obj.password.label }}</label>
+                    <div class="col-sm-10">
+                        {{ form_obj.password }}
+                        <span id="helpBlock2" class="help-block">{{ form_obj.password.errors.0 }}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form_obj.rel_password.id_for_label }}"
+                           class="col-sm-2 ">{{ form_obj.rel_password.label }}</label>
+                    <div class="col-sm-10">
+                        {{ form_obj.rel_password }}
+                        <span id="helpBlock2" class="help-block">{{ form_obj.rel_password.errors.0 }}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="{{ form_obj.email.id_for_label }}" class="col-sm-2 ">{{ form_obj.email.label }}</label>
+                    <div class="col-sm-10">
+                        {{ form_obj.email }}
+                        <span id="helpBlock2" class="help-block">{{ form_obj.email.errors.0 }}</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label
+                            class="col-sm-2 control-label">头像</label>
+                    <div class="col-sm-10">
+                        <label for="id_avatar"><img id="avatar-img" src="/static/img/default.png" alt=""></label>
+                        <input accept="image/*" type="file" name="avatar" id="id_avatar" style="display: none">
+                        <span class="help-block"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="button" class="btn btn-success" id="d1">注册</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+
+</div>
+<script src="../static/jquery-3.3.1.js"></script>
+<script src="../static/bootstrap/js/bootstrap.min.js"></script>
+<script>
+    $("#id_avatar").change(function () {
+        // 1. 创建一个读取文件的对象
+        var fileReader = new FileReader();
+        // 取到当前选中的头像文件
+        // console.log(this.files[0]);
+        // 读取你选中的那个文件
+        fileReader.readAsDataURL(this.files[0]);  // 读取文件是需要时间的
+        fileReader.onload = function () {
+            // 2. 等上一步读完文件之后才 把图片加载到img标签中
+            $("#avatar-img").attr("src", fileReader.result);
+        };
+    });
+
+    $('#d1').click(function () {
+        //上传文件时需要使用FormData方法。
+        var formData = new FormData();
+        formData.append("username", $("#id_username").val());
+        formData.append("password", $("#id_password").val());
+        formData.append("rel_password", $("#id_rel_password").val());
+        formData.append("email", $("#id_email").val());
+        formData.append("avatar", $("#id_avatar")[0].files[0]);
+        formData.append("csrfmiddlewaretoken", $("[name='csrfmiddlewaretoken']").val());
+       $.ajax({
+           url:'/sign/',
+           type:'post',
+           processData:false,
+           contentType:false,
+           data:formData,
+           //不需要上传文件时用这种方法：
+        {#var username = $('#id_username').val();#}
+        {#var password = $('#id_password').val();#}
+        {#var rel_password = $('#id_rel_password').val();#}
+        {#var email = $('#id_email').val();#}
+        {#var csrfmiddlewaretoken = $("[name='csrfmiddlewaretoken']").val();#}
+
+        {#$.ajax({#}
+        {#   url:'/sign/',#}
+        {#   type:'post',#}
+        {#   data:{#}
+        {#       username:username,#}
+        {#       password:password,#}
+        {#       rel_password:rel_password,#}
+        {#       email:email,#}
+        {#       csrfmiddlewaretoken:csrfmiddlewaretoken,#}
+        {#   },#}
+           success:function (data) {
+               if (data.status){
+                   $.each(data.msg,function (k,v) {
+                       $('#id_'+k).next('span').text(v[0]).parent().parent().addClass("has-error");
+                   })
+               }else{
+                   location.href = data.msg;
+               }
+           }
+       })
+    });
+
+    $("form input").focus(function () {
+       $(this).next().text("").parent().parent().removeClass('has-error')
+
+    });
+    $('#id_username').on("input",function () {
+        var username = $('#id_username').val();
+        $('#id_username').next('span').text("").parent().parent().removeClass('has-error');
+        $.ajax({
+            url:'/check_username/',
+            type:'get',
+            data:{"username":username},
+            success:function (data) {
+                if (data.status){
+                     $('#id_username').next().text(data.msg).parent().parent().addClass('has-error')
+                }
+            }
+        })
+
+    })
+</script>
+</body>
+</html>

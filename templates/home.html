@@ -1,0 +1,36 @@
+{% extends '母版.html' %}
+{% block page-main %}
+    <div class="col-md-8">
+        <div class="article-list">
+            {% for article in article_list %}
+                <div class="article">
+                    <p class="article-title"><a
+                            href="/app01/{{ article.user.username }}/article/{{ article.pk }}">{{ article.title }}</a>
+                    </p>
+                    <div class="media">
+                        <div class="media-left">
+                            <a href="#">
+                                <img class="media-object author-img"
+                                     src="/media/{{ article.user.avatar }}" alt="...">
+                            </a>
+                        </div>
+                        <div class="media-body">
+                            <p>{{ article.desc }}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="article-footer">
+                            <span ><a href="#">{{ article.user.username }}</a></span>发布与
+                            <span >{{ article.create_time|date:'Y-m-d H:i:s' }}</span>
+                            <span
+                                  class="glyphicon glyphicon-comment">评论({{ article.comment_set.all.count }})</span>
+                            <span
+                                  class="glyphicon glyphicon-thumbs-up">点赞({{ article.articleupdown_set.all.count }})</span>
+                        </div>
+                        <hr>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}
